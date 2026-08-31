@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Logs & Temporary
+*.log
+*.tmp
+
+# Native Build Artifacts
+mac_widget/PowerPulseBar
+mac_widget/PowerPulseBar.app/Contents/MacOS/PowerPulseBar
