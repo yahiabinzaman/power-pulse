@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# CYBER_VOLT // macOS One-Click Installer & Widget Setup
+# CYBER_VOLT // macOS One-Click Installer & Persistent Widget Setup
 # Developed for Yahia Bin Zaman
 # ==============================================================================
 
@@ -10,47 +10,99 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 echo "=========================================================="
-echo "⚡ CYBER_VOLT // macOS Installer & Menu Bar Widget Setup"
-echo "   System Architect: Yahia Bin Zaman"
+echo "  CYBER_VOLT // PowerPulse macOS Installer"
+echo "  System Architect: Yahia Bin Zaman"
 echo "=========================================================="
 
-APP_DEST="$HOME/Applications"
-mkdir -p "$APP_DEST"
+APP_DEST="/Applications/PowerPulse.app"
 
-# 1. Compile Latest Swift Menu Bar Widget
-echo "⚙️ [1/4] Compiling Native Menu Bar Widget (Swift)..."
+# 1. Compile Native Swift Status Bar Widget
+echo "[*] [1/5] Compiling Native Swift Menu Bar App..."
 swiftc -O -o "$DIR/mac_widget/PowerPulseBar" "$DIR/mac_widget/PowerPulseBar.swift"
-mkdir -p "$DIR/mac_widget/PowerPulseBar.app/Contents/MacOS"
-cp "$DIR/mac_widget/PowerPulseBar" "$DIR/mac_widget/PowerPulseBar.app/Contents/MacOS/"
 
-# 2. Copy App to Applications folder
-echo "📦 [2/4] Installing PowerPulse to $APP_DEST..."
-cp -R "$DIR/mac_widget/PowerPulseBar.app" "$APP_DEST/"
+# 2. Package Self-Contained App Bundle
+echo "[*] [2/5] Building Self-Contained PowerPulse.app..."
+mkdir -p "$DIR/dist/PowerPulse.app/Contents/MacOS"
+mkdir -p "$DIR/dist/PowerPulse.app/Contents/Resources"
 
-# 3. Create Desktop Launcher
-echo "🖥️ [3/4] Creating Desktop Launcher..."
-DESKTOP_DIR="$HOME/Desktop"
-cat << 'EOF' > "$DESKTOP_DIR/Launch CYBER_VOLT.command"
-#!/usr/bin/env bash
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-"$HOME/Applications/PowerPulseBar.app/Contents/MacOS/PowerPulseBar" &
-open "http://127.0.0.1:8765"
+cp "$DIR/mac_widget/PowerPulseBar" "$DIR/dist/PowerPulse.app/Contents/MacOS/"
+cp "$DIR/app.py" "$DIR/dist/PowerPulse.app/Contents/Resources/"
+cp "$DIR/power_engine.py" "$DIR/dist/PowerPulse.app/Contents/Resources/"
+cp -R "$DIR/static" "$DIR/dist/PowerPulse.app/Contents/Resources/"
+
+cat << 'EOF' > "$DIR/dist/PowerPulse.app/Contents/Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>PowerPulseBar</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.yahiabinzaman.powerpulse</string>
+    <key>CFBundleName</key>
+    <string>PowerPulse</string>
+    <key>CFBundleDisplayName</key>
+    <string>PowerPulse</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>4.2</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
 EOF
-chmod +x "$DESKTOP_DIR/Launch CYBER_VOLT.command"
+chmod +x "$DIR/dist/PowerPulse.app/Contents/MacOS/PowerPulseBar"
 
-# 4. Set up Auto-Start on Boot (Login Items)
-echo "🚀 [4/4] Configuring Auto-Start in macOS Menu Bar..."
-osascript -e "tell application \"System Events\" to delete (login items whose name is \"PowerPulseBar\")" 2>/dev/null || true
-osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$APP_DEST/PowerPulseBar.app\", hidden:false}" 2>/dev/null || true
+# 3. Create .DMG Installer Disk Image
+echo "[*] [3/5] Creating PowerPulse-Installer.dmg..."
+mkdir -p "$DIR/dist/dmg_root"
+rm -rf "$DIR/dist/dmg_root/*"
+cp -R "$DIR/dist/PowerPulse.app" "$DIR/dist/dmg_root/"
+ln -sf /Applications "$DIR/dist/dmg_root/Applications"
+rm -f "$DIR/PowerPulse-Installer.dmg"
+hdiutil create -volname "PowerPulse" -srcfolder "$DIR/dist/dmg_root" -ov -format UDZO "$DIR/PowerPulse-Installer.dmg" > /dev/null
 
-# 5. Launch Application Now
-echo "✨ Starting PowerPulse..."
+# 4. Install App into /Applications
+echo "[*] [4/5] Installing to /Applications/PowerPulse.app..."
 pkill -f PowerPulseBar || true
-open "$APP_DEST/PowerPulseBar.app"
+rm -rf "$APP_DEST"
+cp -R "$DIR/dist/PowerPulse.app" /Applications/
+
+# 5. Register macOS LaunchAgent (Persistent on Reboot / Shutdown)
+echo "[*] [5/5] Configuring Persistent Auto-Start on macOS Boot..."
+PLIST_PATH="$HOME/Library/LaunchAgents/com.yahiabinzaman.powerpulse.plist"
+mkdir -p "$HOME/Library/LaunchAgents"
+
+cat << EOF > "$PLIST_PATH"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.yahiabinzaman.powerpulse</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Applications/PowerPulse.app/Contents/MacOS/PowerPulseBar</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>
+EOF
+
+# Start Application Now
+echo "[*] Starting PowerPulse..."
+open /Applications/PowerPulse.app
 
 echo "=========================================================="
-echo "✅ INSTALLATION COMPLETE!"
-echo "   • Menu Bar Widget is now PINNED to your top status bar!"
-echo "   • Auto-Start on Boot is ACTIVE."
-echo "   • Desktop shortcut created: 'Launch CYBER_VOLT.command'"
+echo " [OK] INSTALLATION COMPLETE!"
+echo " - PowerPulse installed to /Applications/PowerPulse.app"
+echo " - DMG Created: PowerPulse-Installer.dmg"
+echo " - Persistent Auto-Start on Boot: ENABLED"
+echo " - Statusbar Widget is ACTIVE in top menu bar!"
 echo "=========================================================="

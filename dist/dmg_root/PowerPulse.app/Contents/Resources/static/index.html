@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER_VOLT // HACKER POWER IDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700;800&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="crt-theme crt-active">
+  <!-- CRT Scanline & Screen Noise Overlay -->
+  <div class="scanlines"></div>
+  <div class="crt-glow"></div>
+
+  <div class="ide-wrapper">
+    <!-- IDE Top Window Bar -->
+    <header class="ide-topbar">
+      <div class="window-controls">
+        <span class="win-dot close"></span>
+        <span class="win-dot minimize"></span>
+        <span class="win-dot maximize"></span>
+        <span class="ide-title-text"><span class="neon-green">ROOT@CYBER_VOLT:</span>~/power_telemetry_probe.asm [PID: 0x48F2]</span>
+      </div>
+
+      <div class="topbar-status-bar">
+        <div class="status-node online">
+          <span class="pulse-node"></span>
+          <span>SYSTEM_ROOT: SECURE</span>
+        </div>
+        <div class="status-node chip-node" id="sysChipName">
+          <span>HOST: DETECTING_HARDWARE...</span>
+        </div>
+        <div class="status-node" id="netSpeedBadge">
+          <span class="neon-cyan">NET:</span> <span id="netQuickStats">⬇ 0.0M | ⬆ 0.0M</span>
+        </div>
+        <div class="status-node" id="sessionTimerBadge">
+          <span>UPTIME: 00:00:00</span>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="ide-btn" id="btnSpeedtest" title="Run ISP Benchmark">[SPEEDTEST]</button>
+        <button class="ide-btn toggle-crt" id="btnToggleCrt" title="Toggle CRT Scanline Effect">[CRT_FX: ON]</button>
+        <button class="ide-btn" id="btnPauseResume" title="Pause / Resume Monitoring">[FREEZE_FEED]</button>
+        <button class="ide-btn btn-settings" id="btnSettings" title="Config">[CONFIG // TARIFF]</button>
+      </div>
+    </header>
+
+    <!-- IDE Main Workspace -->
+    <div class="ide-workspace">
+      <!-- Left Sidebar: System Hardware Explorer -->
+      <aside class="ide-sidebar">
+        <div class="sidebar-header">
+          <span class="panel-tag">// EXPLORER</span>
+          <span class="branch-tag">TELEMETRY_CORE</span>
+        </div>
+
+        <div class="tree-view">
+          <div class="tree-item active"><span class="tree-icon">▼</span> <span class="neon-green">HARDWARE_NODES</span></div>
+          <div class="tree-sub">
+            <div class="tree-leaf"><span class="leaf-dot cyan"></span> <span id="leafSoC">APPLE_M4.SOC</span></div>
+            <div class="tree-leaf"><span class="leaf-dot purple"></span> <span id="leafCores">10_CORES.CPU</span></div>
+            <div class="tree-leaf"><span class="leaf-dot green"></span> <span id="leafGpu">NEURAL_GPU.ACCEL</span></div>
+            <div class="tree-leaf"><span class="leaf-dot amber"></span> <span id="leafRam">16GB_LPDDR5X.DRAM</span></div>
+          </div>
+
+          <div class="tree-item"><span class="tree-icon">▼</span> <span class="neon-cyan">LIVE_REGISTERS</span></div>
+          <div class="tree-sub">
+            <div class="reg-stat-row">
+              <span class="reg-key">REG_V_PEAK:</span>
+              <span class="reg-val neon-rose" id="peakWatts">0.0 W</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">REG_V_MIN:</span>
+              <span class="reg-val neon-green" id="minWatts">0.0 W</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">REG_V_AVG:</span>
+              <span class="reg-val neon-cyan" id="avgWatts">0.0 W</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">CPU_LOAD:</span>
+              <span class="reg-val neon-amber" id="cpuLoadVal">0.0%</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">CO2_FOOT:</span>
+              <span class="reg-val" id="carbonEmission">0.00 g</span>
+            </div>
+          </div>
+
+          <div class="tree-item"><span class="tree-icon">▼</span> <span class="neon-green">NETWORK_LINK</span></div>
+          <div class="tree-sub">
+            <div class="reg-stat-row">
+              <span class="reg-key">PING_RTT:</span>
+              <span class="reg-val neon-green" id="sidePingVal">12.0 ms</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">TOTAL_DOWN:</span>
+              <span class="reg-val neon-cyan" id="sideDownTotal">0.0 MB</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">TOTAL_UP:</span>
+              <span class="reg-val neon-purple" id="sideUpTotal">0.0 MB</span>
+            </div>
+          </div>
+
+          <div class="tree-item"><span class="tree-icon">▼</span> <span class="neon-purple">TARIFF_DAEMON</span></div>
+          <div class="tree-sub">
+            <div class="reg-stat-row">
+              <span class="reg-key">UNIT_RATE:</span>
+              <span class="reg-val" id="tariffTagLabel">৳8.50/kWh</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">SESSION_KWH:</span>
+              <span class="reg-val neon-green" id="sessionKwh">0.0000 kWh</span>
+            </div>
+            <div class="reg-stat-row">
+              <span class="reg-key">SESSION_BILL:</span>
+              <span class="reg-val neon-amber" id="sessionSpent">৳ 0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-matrix-stream" id="matrixStream">
+          01000101 01001110 01000101 01010010 01000111 01011001
+        </div>
+      </aside>
+
+      <!-- Center / Main Editor Stage -->
+      <section class="ide-main-editor">
+        <!-- Editor Tabs -->
+        <div class="editor-tabs">
+          <div class="tab-item active">
+            <span>realtime_telemetry.hex</span>
+            <span class="tab-dot live-dot"></span>
+          </div>
+          <div class="tab-item">
+            <span>network_traffic_stream.bin</span>
+          </div>
+          <div class="tab-item">
+            <span>oscilloscope_scope.asm</span>
+          </div>
+          <div class="tab-item">
+            <span>tariff_billing_matrix.c</span>
+          </div>
+        </div>
+
+        <!-- Optimized Cockpit Body -->
+        <div class="editor-cockpit-body">
+          <!-- Top Row: HUD Gauges + Network Radar + Cost Matrix (4 Balanced Cards) -->
+          <div class="cockpit-row top-metrics-row">
+            <!-- 1. Main Power Instant Draw Card -->
+            <div class="hud-box main-power-hud">
+              <div class="hud-top">
+                <span class="hud-label">// INSTANT_POWER</span>
+                <span class="hud-chip" id="powerLoadBadge">OPTIMIZED</span>
+              </div>
+              <div class="hud-power-reading">
+                <div class="cyber-lcd-wrap">
+                  <span class="lcd-glitch-text" id="totalWatts">0.0</span>
+                  <span class="lcd-unit">WATTS</span>
+                </div>
+                <div class="ascii-bar-wrapper">
+                  <div class="ascii-bar-track">
+                    <div class="ascii-bar-fill" id="totalGaugeFill" style="width: 25%;"></div>
+                  </div>
+                  <div class="ascii-markers">
+                    <span>0W</span><span>25W</span><span>50W</span><span>100W+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Component Power Sub-Registers -->
+            <div class="hud-box sub-components-hud">
+              <div class="hud-top">
+                <span class="hud-label">// HARDWARE_POWER_MATRIX</span>
+                <span class="hud-tag" id="tdpProfileLabel">Apple Silicon M4</span>
+              </div>
+
+              <div class="comp-matrix-grid">
+                <!-- CPU -->
+                <div class="matrix-cell cpu-cell">
+                  <div class="cell-head">
+                    <span class="cell-title">CORE_CPU_PACKAGE</span>
+                    <span class="cell-val neon-cyan" id="cpuWatts">0.0 W</span>
+                  </div>
+                  <div class="cyber-progress-bg">
+                    <div class="cyber-progress-bar cyan-bar" id="cpuBarFill" style="width: 30%;"></div>
+                  </div>
+                </div>
+
+                <!-- GPU -->
+                <div class="matrix-cell gpu-cell">
+                  <div class="cell-head">
+                    <span class="cell-title">GPU_NEURAL_ENGINE</span>
+                    <span class="cell-val neon-purple" id="gpuWatts">0.0 W</span>
+                  </div>
+                  <div class="cyber-progress-bg">
+                    <div class="cyber-progress-bar purple-bar" id="gpuBarFill" style="width: 20%;"></div>
+                  </div>
+                </div>
+
+                <!-- BASE / RAM -->
+                <div class="matrix-cell ram-cell">
+                  <div class="cell-head">
+                    <span class="cell-title">DRAM_SOC_BASE</span>
+                    <span class="cell-val neon-green" id="baseWatts">0.0 W</span>
+                  </div>
+                  <div class="cyber-progress-bg">
+                    <div class="cyber-progress-bar green-bar" id="ramBarFill" style="width: 15%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Live Internet Speed & Network Radar Deck -->
+            <div class="hud-box network-radar-hud">
+              <div class="hud-top">
+                <span class="hud-label">// LIVE_INTERNET_SPEED</span>
+                <span class="hud-chip" id="netPingBadge">12ms PING</span>
+              </div>
+
+              <div class="net-radar-body">
+                <div class="net-speed-item">
+                  <div class="net-speed-header">
+                    <span class="net-direction"><span class="neon-cyan">⬇ DOWNLOAD</span></span>
+                    <span class="net-speed-val neon-cyan" id="netDownSpeed">0.0 Mbps</span>
+                  </div>
+                  <div class="cyber-progress-bg">
+                    <div class="cyber-progress-bar cyan-bar" id="netDownBarFill" style="width: 10%;"></div>
+                  </div>
+                  <span class="net-sub-val" id="netDownKbs">0.0 KB/s</span>
+                </div>
+
+                <div class="net-speed-item">
+                  <div class="net-speed-header">
+                    <span class="net-direction"><span class="neon-purple">⬆ UPLOAD</span></span>
+                    <span class="net-speed-val neon-purple" id="netUpSpeed">0.0 Mbps</span>
+                  </div>
+                  <div class="cyber-progress-bg">
+                    <div class="cyber-progress-bar purple-bar" id="netUpBarFill" style="width: 10%;"></div>
+                  </div>
+                  <span class="net-sub-val" id="netUpKbs">0.0 KB/s</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Electricity Cost Estimate Grid -->
+            <div class="hud-box cost-matrix-hud">
+              <div class="hud-top">
+                <span class="hud-label">// BILLING_PROJECTION</span>
+                <span class="hud-tag neon-amber">TARIFF</span>
+              </div>
+              <div class="cost-tri-grid">
+                <div class="cost-cell">
+                  <span class="cost-code">// HOURLY</span>
+                  <span class="cost-figure neon-green" id="costPerHour">৳ 0.000</span>
+                  <span class="cost-meta">PER_HR</span>
+                </div>
+                <div class="cost-cell">
+                  <span class="cost-code">// 24H_CYCLE</span>
+                  <span class="cost-figure neon-cyan" id="costPerDay">৳ 0.00</span>
+                  <span class="cost-meta">PER_DAY</span>
+                </div>
+                <div class="cost-cell highlight-cost">
+                  <span class="cost-code">// 30D_MONTH</span>
+                  <span class="cost-figure neon-amber" id="costPerMonth">৳ 0.00</span>
+                  <span class="cost-meta">MONTHLY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Split Row: Oscilloscope & Process Disassembly -->
+          <div class="cockpit-row split-work-row">
+            <!-- Left Half: Oscilloscope Waveform View -->
+            <div class="hud-box chart-scope-box">
+              <div class="scope-header">
+                <div class="scope-title">
+                  <span class="neon-green">OSCILLOSCOPE //</span> LIVE WAVEFORM (1000ms)
+                </div>
+                <div class="scope-legend">
+                  <span class="legend-badge"><span class="badge-dot cyan"></span> TOTAL</span>
+                  <span class="legend-badge"><span class="badge-dot purple"></span> CPU</span>
+                  <span class="legend-badge"><span class="badge-dot green"></span> GPU</span>
+                </div>
+              </div>
+              <div class="scope-canvas-wrap">
+                <canvas id="powerChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Right Half: Power Hungry Processes Disassembly Table -->
+            <div class="hud-box process-disasm-box">
+              <div class="disasm-header">
+                <div class="disasm-title">
+                  <span class="neon-rose">APP_POWER_BREAKDOWN //</span> ACTIVE APPLICATIONS LOAD
+                </div>
+                <div class="disasm-filter">
+                  <span class="prompt-arrow">&gt;&gt; grep</span>
+                  <input type="text" id="procSearchInput" placeholder="filter_app_name..." />
+                </div>
+              </div>
+
+              <div class="disasm-table-wrap">
+                <table class="cyber-table">
+                  <thead>
+                    <tr>
+                      <th>PID</th>
+                      <th>APPLICATION</th>
+                      <th>CATEGORY</th>
+                      <th>CPU%</th>
+                      <th>RAM</th>
+                      <th>WATTS</th>
+                      <th>EST. BILL</th>
+                      <th>LOAD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="procTableBody">
+                    <tr>
+                      <td colspan="8" class="loading-td">[INITIALIZING KERNEL PROBE...]</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Integrated Terminal Console -->
+        <div class="ide-terminal-panel">
+          <div class="terminal-header">
+            <span class="terminal-tab active">CONSOLE // TELEMETRY_STREAM</span>
+            <span class="terminal-tab">DEBUG_LOGS</span>
+            <span class="terminal-tab">SYSCALLS</span>
+          </div>
+          <div class="terminal-output" id="terminalLogStream">
+            <div class="log-line"><span class="log-ts">[00:00:00]</span> <span class="neon-green">[SYSTEM_BOOT]</span> CyberVolt Telemetry Engine v4.2 initialized.</div>
+            <div class="log-line"><span class="log-ts">[00:00:01]</span> <span class="neon-cyan">[HARDWARE_ATTACH]</span> Probing Apple Silicon SoC sensors...</div>
+          </div>
+        </div>
+
+        <!-- Hacker IDE Credits Footer (Single-line Fixed) -->
+        <footer class="ide-footer">
+          <div class="footer-left">
+            <span class="pulse-indicator"></span>
+            <span class="footer-tag">STATUS: SECURE_CORE_v4.2</span>
+            <span class="footer-divider">|</span>
+            <span class="footer-branch">BRANCH: STABLE</span>
+          </div>
+          <div class="footer-center">
+            <a href="https://github.com/yahiabinzaman" target="_blank" rel="noopener noreferrer" class="credits-badge" title="Open Yahia Bin Zaman's GitHub Profile">
+              <span class="credits-label">SYSTEM_ARCHITECT // CREATED_BY:</span>
+              <span class="credits-name neon-green">Yahia Bin Zaman</span>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" class="gh-icon">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+            </a>
+          </div>
+          <div class="footer-right">
+            <span class="footer-coord">LOC: 23.81°N, 90.41°E</span>
+            <span class="footer-divider">|</span>
+            <span class="neon-cyan">CYBER_VOLT © 2026</span>
+          </div>
+        </footer>
+      </section>
+    </div>
+  </div>
+
+  <!-- Settings Hacker Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="hacker-modal">
+      <div class="modal-top">
+        <span class="neon-green">[CONFIG_SYS // TARIFF_REGISTER]</span>
+        <button class="modal-close-btn" id="btnCloseSettings">[ESC / CLOSE]</button>
+      </div>
+      <div class="modal-form">
+        <div class="form-row">
+          <label for="areaPresetSelect">&gt;&gt; SELECT_AREA_PRESET // DPDC / DESCO:</label>
+          <select id="areaPresetSelect">
+            <option value="10.55" selected>[OFFICE] Motijheel Commercial (DPDC LT-E) - ৳10.55/unit</option>
+            <option value="8.90">[HOME] Motijheel Residential Standard (DPDC LT-A) - ৳8.90/unit</option>
+            <option value="10.15">[HIGH] Motijheel Residential High Usage (301-400u) - ৳10.15/unit</option>
+            <option value="13.44">[PEAK] Motijheel Peak Residential (>600 units) - ৳13.44/unit</option>
+            <option value="4.19">[LIFELINE] Dhaka DPDC/DESCO (0-50 units) - ৳4.19/unit</option>
+            <option value="custom">[CUSTOM] Manual Unit Rate</option>
+          </select>
+          <span class="form-hint">// Automatically calibrated for Motijheel, Dhaka under DPDC 2026 tariff schedule.</span>
+        </div>
+
+        <div class="form-row">
+          <label for="tariffRateInput">&gt;&gt; EXACT_TARIFF_RATE_PER_UNIT (1 kWh = 1 Unit):</label>
+          <div class="input-with-postfix">
+            <input type="number" id="tariffRateInput" step="0.05" value="10.55" min="0.1" />
+            <span class="postfix" id="tariffUnitText">৳ / unit</span>
+          </div>
+          <span class="form-hint">// 1 Unit = 1000 Watts for 1 hour. You can adjust this anytime.</span>
+        </div>
+
+        <div class="form-row">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="includeVatCheck" checked style="width: auto;" />
+            <span>&gt;&gt; INCLUDE_GOVT_VAT (+5% Bangladesh Electricity VAT)</span>
+          </label>
+          <span class="form-hint" id="effectiveRateHint">// Effective Rate with VAT: ৳ 11.08 / unit</span>
+        </div>
+
+        <div class="form-row">
+          <label for="currencySelect">&gt;&gt; CURRENCY_SYMBOL:</label>
+          <select id="currencySelect">
+            <option value="৳" selected>৳ (BDT - Bangladeshi Taka)</option>
+            <option value="$">$ (USD - US Dollar)</option>
+            <option value="€">€ (EUR - Euro)</option>
+            <option value="₹">₹ (INR - Indian Rupee)</option>
+            <option value="£">£ (GBP - British Pound)</option>
+            <option value="AED">AED (Dirham)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="refreshRateSelect">&gt;&gt; SENSOR_POLLING_FREQUENCY:</label>
+          <select id="refreshRateSelect">
+            <option value="1000" selected>1000ms (Real-Time Cyber Stream)</option>
+            <option value="2000">2000ms (Standard Sync)</option>
+            <option value="3000">3000ms (Low Power Mode)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-bottom">
+        <button class="ide-btn btn-commit" id="btnSaveSettings">[COMMIT_CHANGES // SAVE_CONFIG]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Speedtest Benchmark Modal -->
+  <div class="modal-overlay" id="speedtestModal">
+    <div class="hacker-modal" style="max-width: 480px;">
+      <div class="modal-top">
+        <span class="neon-cyan">[ISP_BENCHMARK // SPEEDTEST_PROBE]</span>
+        <button class="modal-close-btn" id="btnCloseSpeedtest">[ESC / CLOSE]</button>
+      </div>
+      <div class="modal-form">
+        <div class="speedtest-hud-grid">
+          <div class="st-cell">
+            <span class="st-lbl">// DOWNLOAD_SPEED</span>
+            <span class="st-val neon-cyan" id="stDlVal">-- Mbps</span>
+          </div>
+          <div class="st-cell">
+            <span class="st-lbl">// PING_LATENCY</span>
+            <span class="st-val neon-green" id="stPingVal">-- ms</span>
+          </div>
+        </div>
+
+        <div class="st-status-row">
+          <div class="pulse-indicator" id="stSpinner"></div>
+          <span class="st-status-msg" id="stStatusMsg">Ready to initiate speed probe...</span>
+        </div>
+
+        <div class="cyber-progress-bg" style="height: 6px; margin: 12px 0;">
+          <div class="cyber-progress-bar cyan-bar" id="stProgressBar" style="width: 0%;"></div>
+        </div>
+      </div>
+      <div class="modal-bottom" style="gap: 8px;">
+        <button class="ide-btn" id="btnStartSpeedtest">[START_BENCHMARK]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/chart.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

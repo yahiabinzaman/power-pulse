@@ -34,10 +34,15 @@ A professional, zero-dependency, cyberpunk-themed hardware telemetry monitor and
 - Configurable currency symbols (**৳ BDT**, **$ USD**, **€ EUR**, **₹ INR**, **£ GBP**, **AED**).
 - One-click area tariff presets (e.g. **Motijheel DPDC Commercial/Office ৳10.55/unit**, **Motijheel Peak Slab ৳14.11/unit** with +5% VAT).
 
-### 4. 🍎 Native macOS Status Bar Widget (`PowerPulseBar.app`)
+### 4. 🍎 Native macOS Status Bar Widget (`PowerPulse.app`)
 - 100% native Swift application running directly in your Mac's top Menu Bar.
-- Compact display: `14.8W | 1.2M` (Instant Watts & Download Speed).
-- Clean interactive dropdown menu showing full hardware breakdown, ping, and electricity billing.
+- **Configurable Live Telemetry**:
+  - `Full`: `14.8W | CPU 32% | RAM 65% | 1.2M`
+  - `RAM in GB`: `14.8W | CPU 32% | RAM 10.4G`
+  - `Watts + Net`: `14.8W | 1.2M`
+  - `Watts Only`: `14.8W`
+- **Self-Healing Engine**: Automatically spawns background server if port is closed; local zero-latency fallback ensures the status bar **never goes offline**.
+- **Persistent Auto-Start**: Registers as a macOS LaunchAgent daemon (`~/Library/LaunchAgents/com.yahiabinzaman.powerpulse.plist`) that automatically launches on login and persists across computer restarts/reboots.
 
 ### 5. 🚀 Active Application Power Disassembly
 - Live process table tracking active applications (Chrome, Adobe Illustrator, Photoshop, IDEs, System Compositor).
@@ -47,24 +52,25 @@ A professional, zero-dependency, cyberpunk-themed hardware telemetry monitor and
 
 ## 🚀 Quick Start & Installation
 
-### 🍎 Option 1: macOS One-Click Installer & Autostart Widget
-Run the installer script in terminal:
-```bash
-./install_mac.sh
-```
-- Compiles the Swift Menu Bar widget.
-- Installs `PowerPulseBar.app` to `~/Applications`.
-- Adds PowerPulse to **macOS Login Items** (auto-starts on boot in your Menu Bar).
-- Creates a Desktop shortcut: `Launch CYBER_VOLT`.
+### 🍎 Option 1: macOS One-Click `.DMG` Installer / Script
+1. **Via DMG Disk Image**:
+   - Double-click [`PowerPulse-Installer.dmg`](PowerPulse-Installer.dmg).
+   - Drag **`PowerPulse.app`** into your **`Applications`** folder.
+2. **Via Automated Script**:
+   ```bash
+   ./install_mac.sh
+   ```
+   - Automatically builds DMG, installs to `/Applications/PowerPulse.app`, and configures **Persistent Auto-Start on Boot**.
 
-### 🪟 Option 2: Windows One-Click Installer & Autostart
-Double-click `install_windows.bat` or run:
+### 🪟 Option 2: Windows 100% Virus-Free One-Click Setup
+Double-click [`PowerPulse_Setup_Windows.bat`](PowerPulse_Setup_Windows.bat) or run:
 ```cmd
-install_windows.bat
+PowerPulse_Setup_Windows.bat
 ```
+- **100% Virus-Free**: Uses clean PowerShell & VBScript background launcher without raw unsigned binary wrappers that trigger Windows Defender false positives.
 - Installs to `%LocalAppData%\PowerPulse`.
-- Creates Desktop Shortcut (`CYBER_VOLT.lnk`).
-- Adds to Windows Startup for auto-start on boot.
+- Creates Desktop Shortcut (`PowerPulse.lnk`).
+- Adds to Windows Startup for automatic background telemetry on boot.
 
 ### 🌐 Option 3: Manual Launch (Web Dashboard Only)
 **On macOS**:
