@@ -281,10 +281,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         
         // Header
-        let header = NSMenuItem(title: "⚡ POWER_PULSE // LIVE ACTIVITIES  ●", action: nil, keyEquivalent: "")
-        header.attributedTitle = NSAttributedString(string: "⚡ POWER_PULSE // LIVE ACTIVITIES  ● LIVE", attributes: [
+        let header = NSMenuItem(title: "POWER_PULSE // LIVE TELEMETRY", action: nil, keyEquivalent: "")
+        header.attributedTitle = NSAttributedString(string: "POWER_PULSE // LIVE TELEMETRY", attributes: [
             .font: NSFont.boldSystemFont(ofSize: 12),
-            .foregroundColor: NSColor(red: 0.0, green: 0.9, blue: 0.4, alpha: 1.0)
+            .foregroundColor: NSColor.labelColor
         ])
         header.isEnabled = false
         menu.addItem(header)
@@ -299,8 +299,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let ramPct = ram?.pct ?? 60.0
 
             // 1. Real-Time Hardware Resource Utilization (Live Visual Gauges)
-            let resHeader = NSMenuItem(title: "📊 System Resource Activities", action: nil, keyEquivalent: "")
-            resHeader.attributedTitle = NSAttributedString(string: "📊 System Resource Activities", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+            let resHeader = NSMenuItem(title: "System Resource Activities", action: nil, keyEquivalent: "")
+            resHeader.attributedTitle = NSAttributedString(string: "System Resource Activities", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(resHeader)
 
             menu.addItem(NSMenuItem(title: String(format: "  CPU Load:  %@  %.1f%% (%.1f W)", makeMeter(cpuPct), cpuPct, p.cpu_watts), action: nil, keyEquivalent: ""))
@@ -311,8 +311,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(NSMenuItem.separator())
 
             // 2. Power Telemetry
-            let totalPwr = NSMenuItem(title: String(format: "⚡ Total Power Draw: %.2f Watts", p.total_watts), action: nil, keyEquivalent: "")
-            totalPwr.attributedTitle = NSAttributedString(string: String(format: "⚡ Total Power Draw: %.2f Watts", p.total_watts), attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+            let totalPwr = NSMenuItem(title: String(format: "Total Power Draw: %.2f Watts", p.total_watts), action: nil, keyEquivalent: "")
+            totalPwr.attributedTitle = NSAttributedString(string: String(format: "Total Power Draw: %.2f Watts", p.total_watts), attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(totalPwr)
 
             menu.addItem(NSMenuItem(title: String(format: "  CPU Core Package:   %.1f W", p.cpu_watts), action: nil, keyEquivalent: ""))
@@ -323,8 +323,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // 3. Top Running Applications (Live Activity Stream)
             if let procs = data.processes, !procs.isEmpty {
-                let appHeader = NSMenuItem(title: "🚀 Active Applications (Power Draw)", action: nil, keyEquivalent: "")
-                appHeader.attributedTitle = NSAttributedString(string: "🚀 Active Applications (Power Draw)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+                let appHeader = NSMenuItem(title: "Active Applications (Power Draw)", action: nil, keyEquivalent: "")
+                appHeader.attributedTitle = NSAttributedString(string: "Active Applications (Power Draw)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
                 menu.addItem(appHeader)
 
                 for (idx, proc) in procs.prefix(4).enumerated() {
@@ -337,12 +337,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // 4. Network Telemetry
             if let n = net {
-                let netHeader = NSMenuItem(title: "🌐 Network Radar", action: nil, keyEquivalent: "")
-                netHeader.attributedTitle = NSAttributedString(string: "🌐 Network Radar", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+                let netHeader = NSMenuItem(title: "Network Telemetry", action: nil, keyEquivalent: "")
+                netHeader.attributedTitle = NSAttributedString(string: "Network Telemetry", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
                 menu.addItem(netHeader)
-                menu.addItem(NSMenuItem(title: String(format: "  ⬇ Download: %.2f Mbps (%.1f KB/s)", n.down_mbps, n.down_kbs), action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: String(format: "  ⬆ Upload:   %.2f Mbps (%.1f KB/s)", n.up_mbps, n.up_kbs), action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: String(format: "  ⚡ Latency:  %.1f ms (Real-time Ping)", n.ping_ms), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Download: %.2f Mbps (%.1f KB/s)", n.down_mbps, n.down_kbs), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Upload:   %.2f Mbps (%.1f KB/s)", n.up_mbps, n.up_kbs), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Latency:  %.1f ms (Ping)", n.ping_ms), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem.separator())
             }
 
@@ -351,8 +351,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let costHr = kw * tariffRate
             let hist = data.history
 
-            let costHeader = NSMenuItem(title: "💰 Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
-            costHeader.attributedTitle = NSAttributedString(string: "💰 Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+            let costHeader = NSMenuItem(title: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
+            costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(costHeader)
             menu.addItem(NSMenuItem(title: String(format: "  Live Rate:        %@ %.3f / hr (%.1f Watts)", currencySymbol, costHr, p.total_watts), action: nil, keyEquivalent: ""))
 
