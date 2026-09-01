@@ -329,9 +329,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let dailyAvg = h.averages?.daily_avg_cost ?? 0.0
                 let projMonth = h.averages?.monthly_projected_cost ?? 0.0
 
-                menu.addItem(NSMenuItem(title: String(format: "  Today's Bill: %@ %.2f (%.3f kWh)", currencySymbol, todayCost, todayKwh), action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: String(format: "  This Month: %@ %.2f (%.3f kWh)", currencySymbol, monthCost, monthKwh), action: nil, keyEquivalent: ""))
-                menu.addItem(NSMenuItem(title: String(format: "  All-Time Total: %@ %.2f (%.3f kWh)", currencySymbol, lifeCost, lifeKwh), action: nil, keyEquivalent: ""))
+                func fmt(_ c: Double, _ k: Double) -> String {
+                    if c >= 1.0 {
+                        return String(format: "%@ %.2f (%.3f kWh)", currencySymbol, c, k)
+                    } else if c > 0.00001 {
+                        return String(format: "%@ %.3f (%.4f kWh)", currencySymbol, c, k)
+                    } else {
+                        return String(format: "%@ 0.00 (0.000 kWh)", currencySymbol)
+                    }
+                }
+
+                menu.addItem(NSMenuItem(title: "  Today's Bill: " + fmt(todayCost, todayKwh), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: "  This Month: " + fmt(monthCost, monthKwh), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: "  All-Time Total: " + fmt(lifeCost, lifeKwh), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem(title: String(format: "  Daily Average: %@ %.2f / day", currencySymbol, dailyAvg), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem(title: String(format: "  Monthly Estimate: %@ %.2f (30d Projection)", currencySymbol, projMonth), action: nil, keyEquivalent: ""))
             } else {

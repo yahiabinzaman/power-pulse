@@ -470,9 +470,15 @@ class PowerEngine:
         return default_hist
 
     def _save_history(self):
-        """Save persistent cumulative history to disk."""
+        """Save persistent cumulative history to disk atomically with backup."""
+        tmp_file = self.history_file + ".tmp"
+        bak_file = self.history_file + ".bak"
         try:
-            with open(self.history_file, "w", encoding="utf-8") as f:
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(self.history_data, f, indent=2)
+            os.replace(tmp_file, self.history_file)
+            # Create backup
+            with open(bak_file, "w", encoding="utf-8") as f:
                 json.dump(self.history_data, f, indent=2)
         except Exception:
             pass
@@ -501,13 +507,13 @@ class PowerEngine:
         m["kwh"] += kwh
         m["seconds"] += int(dt)
 
-        # Save to disk every 5 seconds
-        if time.time() - self.last_history_save > 5.0:
+        # Save to disk every 3 seconds
+        if time.time() - self.last_history_save > 3.0:
             self.last_history_save = time.time()
             self._save_history()
 
     def get_history_summary(self, tariff_rate=14.11):
-        """Return structured summary of today, month, lifetime, and daily/monthly averages."""
+        """Return structured summary of today, month, lifetime, and daily/monthly averages with dynamic precision."""
         now_dt = datetime.datetime.now()
         today_key = now_dt.strftime("%Y-%m-%d")
         month_key = now_dt.strftime("%Y-%m")
@@ -515,20 +521,20 @@ class PowerEngine:
         today_rec = self.history_data.get("daily", {}).get(today_key, {"kwh": 0.0, "seconds": 0})
         month_rec = self.history_data.get("monthly", {}).get(month_key, {"kwh": 0.0, "seconds": 0})
 
-        today_kwh = round(today_rec.get("kwh", 0.0), 4)
-        today_cost = round(today_kwh * tariff_rate, 2)
+        today_kwh = round(today_rec.get("kwh", 0.0), 6)
+        today_cost = round(today_kwh * tariff_rate, 4)
 
-        month_kwh = round(month_rec.get("kwh", 0.0), 4)
-        month_cost = round(month_kwh * tariff_rate, 2)
+        month_kwh = round(month_rec.get("kwh", 0.0), 6)
+        month_cost = round(month_kwh * tariff_rate, 4)
 
-        lifetime_kwh = round(self.history_data.get("lifetime_kwh", 0.0), 4)
-        lifetime_cost = round(lifetime_kwh * tariff_rate, 2)
+        lifetime_kwh = round(self.history_data.get("lifetime_kwh", 0.0), 6)
+        lifetime_cost = round(lifetime_kwh * tariff_rate, 4)
 
         # Active days
         active_days = len(self.history_data.get("daily", {}))
         if active_days > 0:
-            daily_avg_kwh = round(lifetime_kwh / active_days, 4)
-            daily_avg_cost = round(lifetime_cost / active_days, 2)
+            daily_avg_kwh = round(lifetime_kwh / active_days, 6)
+            daily_avg_cost = round(lifetime_cost / active_days, 4)
         else:
             daily_avg_kwh = today_kwh
             daily_avg_cost = today_cost
