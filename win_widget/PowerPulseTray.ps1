@@ -30,7 +30,27 @@ function Ensure-ServerRunning {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $appPy = Join-Path (Split-Path -Parent $scriptDir) "app.py"
     if (Test-Path $appPy) {
-        Start-Process -FilePath "pythonw.exe" -ArgumentList "`"$appPy`"" -WindowStyle Hidden -ErrorAction SilentlyContinue
+        $pyExe = $null
+        foreach ($name in @("pythonw.exe", "pyw.exe", "python.exe", "py.exe")) {
+            $cmd = Get-Command $name -ErrorAction SilentlyContinue
+            if ($null -ne $cmd) { $pyExe = $cmd.Source; break }
+        }
+        if ($null -eq $pyExe) {
+            $candidates = @(
+                "$env:LocalAppData\Programs\Python\Python313\pythonw.exe",
+                "$env:LocalAppData\Programs\Python\Python312\pythonw.exe",
+                "$env:LocalAppData\Programs\Python\Python311\pythonw.exe",
+                "$env:LocalAppData\Programs\Python\Python310\pythonw.exe",
+                "C:\Python313\pythonw.exe",
+                "C:\Python312\pythonw.exe",
+                "C:\Python311\pythonw.exe"
+            )
+            foreach ($c in $candidates) {
+                if (Test-Path $c) { $pyExe = $c; break }
+            }
+        }
+        if ($null -eq $pyExe) { $pyExe = "pythonw.exe" }
+        Start-Process -FilePath $pyExe -ArgumentList "`"$appPy`"" -WindowStyle Hidden -ErrorAction SilentlyContinue
     }
 }
 
