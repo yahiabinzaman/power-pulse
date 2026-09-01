@@ -56,6 +56,7 @@ Section "MainSection" SEC01
     File "..\power_engine.py"
     File "..\README.md"
     File "..\LICENSE"
+    File "..\launch_silent.vbs"
 
     ; Assets & Static Web UI
     SetOutPath "$INSTDIR\static"
@@ -67,13 +68,7 @@ Section "MainSection" SEC01
     SetOutPath "$INSTDIR\win_widget"
     File /r "..\win_widget\*.*"
 
-    ; Create Silent Background VBS Daemon Launcher
     SetOutPath "$INSTDIR"
-    FileOpen $0 "$INSTDIR\launch_silent.vbs" w
-    FileWrite $0 'Set WshShell = CreateObject("WScript.Shell")$\r$\n'
-    FileWrite $0 'WshShell.Run "pythonw """ & "$INSTDIR\app.py"""", 0, False$\r$\n'
-    FileWrite $0 'WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ & "$INSTDIR\win_widget\PowerPulseTray.ps1"""", 0, False$\r$\n'
-    FileClose $0
 
     ; Create Shortcuts
     CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
