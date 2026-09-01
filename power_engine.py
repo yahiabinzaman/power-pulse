@@ -413,13 +413,13 @@ class PowerEngine:
 
         session_duration_sec = int(now - self.session_start_time)
 
-        # Update Persistent Energy History
-        self._update_history(joules, dt)
-        history_summary = self.get_history_summary(tariff_rate=14.11)
-
         # Sample Network Bandwidth & Latency
-        net_metrics = self._sample_network_throughput(now)
+        net_metrics, delta_in, delta_out = self._sample_network_throughput(now)
         ram_metrics = self._sample_system_ram()
+
+        # Update Persistent Energy & Internet History
+        self._update_history(joules, dt, delta_in, delta_out)
+        history_summary = self.get_history_summary(tariff_rate=14.11)
 
         return {
             "timestamp": now,
@@ -454,6 +454,8 @@ class PowerEngine:
             "installed_at": now_iso,
             "lifetime_joules": 0.0,
             "lifetime_kwh": 0.0,
+            "lifetime_in_bytes": 0,
+            "lifetime_out_bytes": 0,
             "daily": {},
             "monthly": {}
         }
@@ -463,6 +465,8 @@ class PowerEngine:
                     data = json.load(f)
                     if "installed_at" not in data: data["installed_at"] = now_iso
                     if "lifetime_kwh" not in data: data["lifetime_kwh"] = 0.0
+                    if "lifetime_in_bytes" not in data: data["lifetime_in_bytes"] = 0
+                    if "lifetime_out_bytes" not in data: data["lifetime_out_bytes"] = 0
                     if "daily" not in data: data["daily"] = {}
                     if "monthly" not in data: data["monthly"] = {}
                     return data
@@ -484,8 +488,8 @@ class PowerEngine:
         except Exception:
             pass
 
-    def _update_history(self, joules, dt):
-        """Accumulate joules into lifetime, today's, and this month's buckets."""
+    def _update_history(self, joules, dt, in_bytes=0, out_bytes=0):
+        """Accumulate joules and internet data into lifetime, today's, and this month's buckets."""
         now_dt = datetime.datetime.now()
         today_key = now_dt.strftime("%Y-%m-%d")
         month_key = now_dt.strftime("%Y-%m")
@@ -495,18 +499,24 @@ class PowerEngine:
         # Lifetime
         self.history_data["lifetime_joules"] = self.history_data.get("lifetime_joules", 0.0) + joules
         self.history_data["lifetime_kwh"] = self.history_data.get("lifetime_kwh", 0.0) + kwh
+        self.history_data["lifetime_in_bytes"] = self.history_data.get("lifetime_in_bytes", 0) + in_bytes
+        self.history_data["lifetime_out_bytes"] = self.history_data.get("lifetime_out_bytes", 0) + out_bytes
 
         # Daily
-        d = self.history_data["daily"].setdefault(today_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0})
+        d = self.history_data["daily"].setdefault(today_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0, "in_bytes": 0, "out_bytes": 0})
         d["joules"] += joules
         d["kwh"] += kwh
         d["seconds"] += int(dt)
+        d["in_bytes"] = d.get("in_bytes", 0) + in_bytes
+        d["out_bytes"] = d.get("out_bytes", 0) + out_bytes
 
         # Monthly
-        m = self.history_data["monthly"].setdefault(month_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0})
+        m = self.history_data["monthly"].setdefault(month_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0, "in_bytes": 0, "out_bytes": 0})
         m["joules"] += joules
         m["kwh"] += kwh
         m["seconds"] += int(dt)
+        m["in_bytes"] = m.get("in_bytes", 0) + in_bytes
+        m["out_bytes"] = m.get("out_bytes", 0) + out_bytes
 
         # Save to disk every 3 seconds
         if time.time() - self.last_history_save > 3.0:
@@ -519,8 +529,8 @@ class PowerEngine:
         today_key = now_dt.strftime("%Y-%m-%d")
         month_key = now_dt.strftime("%Y-%m")
 
-        today_rec = self.history_data.get("daily", {}).get(today_key, {"kwh": 0.0, "seconds": 0})
-        month_rec = self.history_data.get("monthly", {}).get(month_key, {"kwh": 0.0, "seconds": 0})
+        today_rec = self.history_data.get("daily", {}).get(today_key, {"kwh": 0.0, "seconds": 0, "in_bytes": 0, "out_bytes": 0})
+        month_rec = self.history_data.get("monthly", {}).get(month_key, {"kwh": 0.0, "seconds": 0, "in_bytes": 0, "out_bytes": 0})
 
         today_kwh = round(today_rec.get("kwh", 0.0), 6)
         today_cost = round(today_kwh * tariff_rate, 4)
@@ -530,6 +540,27 @@ class PowerEngine:
 
         lifetime_kwh = round(self.history_data.get("lifetime_kwh", 0.0), 6)
         lifetime_cost = round(lifetime_kwh * tariff_rate, 4)
+
+        # Internet Data Summaries
+        def fmt_bytes(b):
+            if b >= 1024**3:
+                return f"{round(b / (1024**3), 2)} GB"
+            elif b >= 1024**2:
+                return f"{round(b / (1024**2), 1)} MB"
+            else:
+                return f"{round(b / 1024, 0):.0f} KB"
+
+        today_in = today_rec.get("in_bytes", 0)
+        today_out = today_rec.get("out_bytes", 0)
+        today_total_net = today_in + today_out
+
+        month_in = month_rec.get("in_bytes", 0)
+        month_out = month_rec.get("out_bytes", 0)
+        month_total_net = month_in + month_out
+
+        lifetime_in = self.history_data.get("lifetime_in_bytes", 0)
+        lifetime_out = self.history_data.get("lifetime_out_bytes", 0)
+        lifetime_total_net = lifetime_in + lifetime_out
 
         # Active days
         active_days = len(self.history_data.get("daily", {}))
@@ -548,17 +579,25 @@ class PowerEngine:
                 "date": today_key,
                 "kwh": today_kwh,
                 "cost": today_cost,
-                "active_seconds": today_rec.get("seconds", 0)
+                "active_seconds": today_rec.get("seconds", 0),
+                "data_total_bytes": today_total_net,
+                "data_formatted": fmt_bytes(today_total_net),
+                "data_down_formatted": fmt_bytes(today_in),
+                "data_up_formatted": fmt_bytes(today_out)
             },
             "this_month": {
                 "month": month_key,
                 "kwh": month_kwh,
-                "cost": month_cost
+                "cost": month_cost,
+                "data_total_bytes": month_total_net,
+                "data_formatted": fmt_bytes(month_total_net)
             },
             "lifetime": {
                 "kwh": lifetime_kwh,
                 "cost": lifetime_cost,
-                "active_days": max(1, active_days)
+                "active_days": active_days if active_days > 0 else 1,
+                "data_total_bytes": lifetime_total_net,
+                "data_formatted": fmt_bytes(lifetime_total_net)
             },
             "averages": {
                 "daily_avg_kwh": daily_avg_kwh,
@@ -663,7 +702,7 @@ class PowerEngine:
         # Real-time sub-millisecond ping measurement on every sample
         self.last_ping_ms = self._measure_ping_latency()
 
-        return {
+        metrics = {
             "down_kbs": round(down_kbs, 1),
             "up_kbs": round(up_kbs, 1),
             "down_mbps": round(down_mbps, 2),
@@ -672,6 +711,7 @@ class PowerEngine:
             "session_down_mb": round(self.session_download_bytes / (1024.0 * 1024.0), 1),
             "session_up_mb": round(self.session_upload_bytes / (1024.0 * 1024.0), 1)
         }
+        return (metrics, delta_in, delta_out)
 
     def _measure_ping_latency(self):
         """Measure real network round-trip ping time in milliseconds using low-overhead direct socket connect."""

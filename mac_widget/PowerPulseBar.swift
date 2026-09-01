@@ -39,18 +39,23 @@ struct DayRecord: Codable {
     let kwh: Double?
     let cost: Double?
     let active_seconds: Int?
+    let data_formatted: String?
+    let data_down_formatted: String?
+    let data_up_formatted: String?
 }
 
 struct MonthRecord: Codable {
     let month: String?
     let kwh: Double?
     let cost: Double?
+    let data_formatted: String?
 }
 
 struct LifetimeRecord: Codable {
     let kwh: Double?
     let cost: Double?
     let active_days: Int?
+    let data_formatted: String?
 }
 
 struct AveragesRecord: Codable {
@@ -294,6 +299,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let p = data.power
             let net = data.network
             let ram = data.ram
+            let hist = data.history
             let gpuPct = data.gpu_usage_pct ?? 8.0
             let cpuPct = data.cpu_usage_pct
             let ramPct = ram?.pct ?? 60.0
@@ -335,13 +341,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(NSMenuItem.separator())
             }
 
-            // 4. Network Telemetry
+            // 4. Network Telemetry & Daily Data Usage
             if let n = net {
                 let netHeader = NSMenuItem(title: "Network Telemetry", action: nil, keyEquivalent: "")
                 netHeader.attributedTitle = NSAttributedString(string: "Network Telemetry", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
                 menu.addItem(netHeader)
                 menu.addItem(NSMenuItem(title: String(format: "  Download: %.2f Mbps (%.1f KB/s)", n.down_mbps, n.down_kbs), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem(title: String(format: "  Upload:   %.2f Mbps (%.1f KB/s)", n.up_mbps, n.up_kbs), action: nil, keyEquivalent: ""))
+                
+                if let todayData = hist?.today?.data_formatted {
+                    let downFmt = hist?.today?.data_down_formatted ?? "0 MB"
+                    let upFmt = hist?.today?.data_up_formatted ?? "0 MB"
+                    menu.addItem(NSMenuItem(title: String(format: "  Today's Data:   %@ (Down: %@ | Up: %@)", todayData, downFmt, upFmt), action: nil, keyEquivalent: ""))
+                }
+                if let monthData = hist?.this_month?.data_formatted {
+                    menu.addItem(NSMenuItem(title: String(format: "  This Month:     %@", monthData), action: nil, keyEquivalent: ""))
+                }
+                
                 menu.addItem(NSMenuItem(title: String(format: "  Latency:  %.1f ms (Ping)", n.ping_ms), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem.separator())
             }
@@ -349,7 +365,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // 5. Electricity Cost & Energy Tracking (Motijheel Peak @ ৳14.11/kWh)
             let kw = p.total_watts / 1000.0
             let costHr = kw * tariffRate
-            let hist = data.history
 
             let costHeader = NSMenuItem(title: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
             costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
