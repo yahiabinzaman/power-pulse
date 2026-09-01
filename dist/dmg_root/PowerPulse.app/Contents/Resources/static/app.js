@@ -295,15 +295,33 @@ function updateDashboard(data) {
     if (sideUpTotalEl) sideUpTotalEl.textContent = `${net.session_up_mb} MB`;
   }
 
-  // 4. Electricity Cost
+  // 4. Electricity Cost & History Tracking
   const kw = totalW / 1000.0;
   const costHour = kw * tariffRate;
-  const costDay = costHour * 24;
-  const costMonth = costDay * 30;
 
-  costPerHourEl.textContent = `${currencySymbol} ${costHour.toFixed(4)}`;
-  costPerDayEl.textContent = `${currencySymbol} ${costDay.toFixed(2)}`;
-  costPerMonthEl.textContent = `${currencySymbol} ${costMonth.toFixed(2)}`;
+  if (data.history) {
+    const h = data.history;
+    const tCost = (h.today && h.today.kwh) ? (h.today.kwh * tariffRate) : 0;
+    const mCost = (h.this_month && h.this_month.kwh) ? (h.this_month.kwh * tariffRate) : 0;
+    const lCost = (h.lifetime && h.lifetime.kwh) ? (h.lifetime.kwh * tariffRate) : 0;
+    const dAvgCost = (h.averages && h.averages.daily_avg_kwh) ? (h.averages.daily_avg_kwh * tariffRate) : (costHour * 24);
+
+    const costTodayEl = document.getElementById("costToday");
+    const kwhTodayEl = document.getElementById("kwhToday");
+    const costMonthEl = document.getElementById("costMonth");
+    const kwhMonthEl = document.getElementById("kwhMonth");
+    const costLifetimeEl = document.getElementById("costLifetime");
+    const kwhLifetimeEl = document.getElementById("kwhLifetime");
+    const costDailyAvgEl = document.getElementById("costDailyAvg");
+
+    if (costTodayEl) costTodayEl.textContent = `${currencySymbol} ${tCost.toFixed(2)}`;
+    if (kwhTodayEl) kwhTodayEl.textContent = `${(h.today?.kwh || 0).toFixed(3)} kWh`;
+    if (costMonthEl) costMonthEl.textContent = `${currencySymbol} ${mCost.toFixed(2)}`;
+    if (kwhMonthEl) kwhMonthEl.textContent = `${(h.this_month?.kwh || 0).toFixed(3)} kWh`;
+    if (costLifetimeEl) costLifetimeEl.textContent = `${currencySymbol} ${lCost.toFixed(2)}`;
+    if (kwhLifetimeEl) kwhLifetimeEl.textContent = `${(h.lifetime?.kwh || 0).toFixed(3)} kWh`;
+    if (costDailyAvgEl) costDailyAvgEl.textContent = `${currencySymbol} ${dAvgCost.toFixed(2)}`;
+  }
 
   // Session
   if (data.session) {
