@@ -344,6 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(NSMenuItem(title: "  All-Time Total: " + fmt(lifeCost, lifeKwh), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem(title: String(format: "  Daily Average: %@ %.2f / day", currencySymbol, dailyAvg), action: nil, keyEquivalent: ""))
                 menu.addItem(NSMenuItem(title: String(format: "  Monthly Estimate: %@ %.2f (30d Projection)", currencySymbol, projMonth), action: nil, keyEquivalent: ""))
+                
+                let installDate = String((h.installed_at ?? "").prefix(10))
+                let days = h.lifetime?.active_days ?? 1
+                menu.addItem(NSMenuItem(title: String(format: "  Tracking Since: %@ (%d %@ active)", installDate, days, days == 1 ? "day" : "days"), action: nil, keyEquivalent: ""))
             } else {
                 let costDay = costHr * 24.0
                 let costMo = costHr * 24.0 * 30.0
