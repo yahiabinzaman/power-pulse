@@ -7,14 +7,27 @@
 
 ; General Definitions
 !define PRODUCT_NAME "PowerPulse"
-!define PRODUCT_VERSION "4.2"
+!define PRODUCT_VERSION "4.2.0.0"
+!define PRODUCT_VERSION_STR "4.2"
 !define PRODUCT_PUBLISHER "Yahia Bin Zaman"
 !define PRODUCT_WEB_SITE "https://github.com/yahiabinzaman/power-pulse"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKCU"
 
+; Version Information for Windows Explorer & Defender Trust
+VIProductVersion "${PRODUCT_VERSION}"
+VIFileVersion "${PRODUCT_VERSION}"
+VIAddVersionKey "ProductName" "${PRODUCT_NAME}"
+VIAddVersionKey "Comments" "PowerPulse Hardware Power & Network Telemetry Cockpit"
+VIAddVersionKey "CompanyName" "${PRODUCT_PUBLISHER}"
+VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 Yahia Bin Zaman"
+VIAddVersionKey "FileDescription" "PowerPulse Installer"
+VIAddVersionKey "FileVersion" "${PRODUCT_VERSION_STR}"
+VIAddVersionKey "ProductVersion" "${PRODUCT_VERSION_STR}"
+VIAddVersionKey "OriginalFilename" "PowerPulse-Windows-Setup-v4.2.exe"
+
 ; Name and Output File
-Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+Name "${PRODUCT_NAME} ${PRODUCT_VERSION_STR}"
 OutFile "..\PowerPulse-Windows-Setup-v4.2.exe"
 InstallDir "$LOCALAPPDATA\PowerPulse"
 RequestExecutionLevel user
