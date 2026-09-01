@@ -121,33 +121,27 @@ class PowerPulseHandler(SimpleHTTPRequestHandler):
         # Silence verbose GET spam in console for clean UI output
         pass
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex((HOST, port)) == 0
-
-def find_available_port(start_port):
-    port = start_port
-    while is_port_in_use(port):
-        port += 1
-    return port
-
 def run_app():
     global PORT
-    PORT = find_available_port(PORT)
+    PORT = 8765
     server_url = f"http://{HOST}:{PORT}"
 
-    server = ThreadedHTTPServer((HOST, PORT), PowerPulseHandler)
+    try:
+        server = ThreadedHTTPServer((HOST, PORT), PowerPulseHandler)
+    except OSError:
+        print(f"[PowerPulse] Server is already active on {server_url}")
+        sys.exit(0)
+
     print("\n" + "="*56)
-    print(" ⚡ PowerPulse - Real-time Computer Power Monitor ⚡ ")
+    print(" CYBER_VOLT // PowerPulse Telemetry Engine ")
     print("="*56)
     print(f" Platform : {engine.system_info['os']} ({engine.system_info['cpu_brand']})")
     print(f" Web UI   : {server_url}")
     print("="*56)
-    print(" Dashboard is launching in your default browser...")
-    print(" Press Ctrl+C to stop the monitor.\n")
 
-    # Auto open browser after brief delay
-    threading.Timer(0.8, lambda: webbrowser.open(server_url)).start()
+    # Only open browser if explicitly requested via --open flag
+    if "--open" in sys.argv:
+        threading.Timer(0.8, lambda: webbrowser.open(server_url)).start()
 
     try:
         server.serve_forever()
