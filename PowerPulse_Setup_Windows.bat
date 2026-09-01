@@ -53,6 +53,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 "$s.TargetPath = 'wscript.exe'; " ^
 "$s.Arguments = '\"%INSTALL_DIR%\launch_silent.vbs\"'; " ^
 "$s.WorkingDirectory = '%INSTALL_DIR%'; " ^
+"$s.IconLocation = '%INSTALL_DIR%\assets\logo.ico'; " ^
 "$s.Description = 'CYBER_VOLT PowerPulse Live Telemetry & Tray Widget'; " ^
 "$s.Save()"
 
@@ -63,6 +64,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 "$s.TargetPath = 'pythonw.exe'; " ^
 "$s.Arguments = '\"%INSTALL_DIR%\win_widget\PowerPulse_Widget.pyw\"'; " ^
 "$s.WorkingDirectory = '%INSTALL_DIR%'; " ^
+"$s.IconLocation = '%INSTALL_DIR%\assets\logo.ico'; " ^
 "$s.Description = 'PowerPulse Desktop Floating Glass HUD'; " ^
 "$s.Save()"
 
@@ -74,6 +76,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 "$s.TargetPath = 'wscript.exe'; " ^
 "$s.Arguments = '\"%INSTALL_DIR%\launch_silent.vbs\"'; " ^
 "$s.WorkingDirectory = '%INSTALL_DIR%'; " ^
+"$s.IconLocation = '%INSTALL_DIR%\assets\logo.ico'; " ^
 "$s.Description = 'PowerPulse Background Telemetry & System Tray Widget'; " ^
 "$s.Save()"
 
