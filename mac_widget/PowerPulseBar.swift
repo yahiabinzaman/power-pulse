@@ -70,6 +70,7 @@ struct HistoryData: Codable {
 struct TelemetryResponse: Codable {
     let power: PowerData
     let cpu_usage_pct: Double
+    let gpu_usage_pct: Double?
     let ram: RamData?
     let processes: [ProcessItem]?
     let network: NetworkData?
@@ -201,6 +202,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return TelemetryResponse(
             power: power,
             cpu_usage_pct: cpuVal,
+            gpu_usage_pct: 8.0,
             ram: RamData(used_gb: round(ramUsedGB * 10) / 10, total_gb: round(totalGB * 10) / 10, pct: round(ramPct * 10) / 10),
             processes: nil,
             network: NetworkData(down_mbps: 0.0, up_mbps: 0.0, ping_ms: 1.5, down_kbs: 0.0, up_kbs: 0.0),
@@ -240,18 +242,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let p = data.power
         let net = data.network
         let cpuPct = data.cpu_usage_pct
+        let gpuPct = data.gpu_usage_pct ?? 8.0
         let ramPct = data.ram?.pct ?? 65.0
         let ramGB = data.ram?.used_gb ?? 10.5
 
         // Format Status Bar text based on user preference
         if let button = statusItem.button {
             switch displayMode {
-            case 0: // Full (Watts + CPU + RAM + Net)
+            case 0: // Full (Watts + CPU% + GPU% + RAM% + Net)
+                let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
+                button.title = String(format: "%.1fW  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, cpuPct, gpuPct, ramPct, netText)
+            case 1: // Power + CPU% + GPU% + RAM (GB)
+                button.title = String(format: "%.1fW  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.1fG", p.total_watts, cpuPct, gpuPct, ramGB)
+            case 2: // Power + CPU% + RAM% + Net (Without GPU)
                 let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
                 button.title = String(format: "%.1fW  |  CPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, cpuPct, ramPct, netText)
-            case 1: // Power + CPU + RAM (GB)
-                button.title = String(format: "%.1fW  |  CPU %.0f%%  |  RAM %.1fG", p.total_watts, cpuPct, ramGB)
-            case 2: // Power + Net
+            case 3: // Power + Net
                 let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
                 button.title = String(format: "%.1fW  |  %@", p.total_watts, netText)
             default: // Power Only
@@ -276,6 +282,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let p = data.power
             let net = data.network
             let ram = data.ram
+            let gpuPct = data.gpu_usage_pct ?? 8.0
 
             // Power
             let totalPwr = NSMenuItem(title: String(format: "Total Power Draw: %.2f Watts", p.total_watts), action: nil, keyEquivalent: "")
@@ -283,16 +290,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(totalPwr)
 
             menu.addItem(NSMenuItem(title: String(format: "  CPU Package: %.1f W (Load: %.1f%%)", p.cpu_watts, data.cpu_usage_pct), action: nil, keyEquivalent: ""))
-            menu.addItem(NSMenuItem(title: String(format: "  GPU & Neural Engine: %.1f W", p.gpu_watts), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "  GPU & Neural Engine: %.1f W (Load: %.1f%%)", p.gpu_watts, gpuPct), action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem(title: String(format: "  RAM & SoC Base Load: %.1f W", p.base_watts), action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem(title: String(format: "  Min: %.1fW | Avg: %.1fW | Peak: %.1fW", p.min_watts, p.avg_watts, p.peak_watts), action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem.separator())
 
-            // Real-Time Hardware Resource Utilization (CPU & RAM)
+            // Real-Time Hardware Resource Utilization (CPU, GPU & RAM)
             let resHeader = NSMenuItem(title: "System Hardware Utilization", action: nil, keyEquivalent: "")
             resHeader.attributedTitle = NSAttributedString(string: "System Hardware Utilization", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(resHeader)
             menu.addItem(NSMenuItem(title: String(format: "  Active CPU Load: %.1f%%", data.cpu_usage_pct), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "  Active GPU Load: %.1f%% (%.1f W)", gpuPct, p.gpu_watts), action: nil, keyEquivalent: ""))
             if let r = ram {
                 menu.addItem(NSMenuItem(title: String(format: "  RAM Usage: %.1f GB / %.1f GB (%.1f%%)", r.used_gb ?? 0, r.total_gb ?? 16, r.pct ?? 0), action: nil, keyEquivalent: ""))
             }
@@ -370,10 +378,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Display Format Submenu
         let formatMenu = NSMenu()
         let formats = [
-            (0, "Full (Watts + CPU% + RAM% + Net)"),
-            (1, "Watts + CPU% + RAM (GB)"),
-            (2, "Watts + Net"),
-            (3, "Watts Only")
+            (0, "Full (Watts + CPU% + GPU% + RAM% + Net)"),
+            (1, "Watts + CPU% + GPU% + RAM (GB)"),
+            (2, "Watts + CPU% + RAM% + Net"),
+            (3, "Watts + Net"),
+            (4, "Watts Only")
         ]
         for (idx, title) in formats {
             let item = NSMenuItem(title: title, action: #selector(changeDisplayFormat(_:)), keyEquivalent: "")

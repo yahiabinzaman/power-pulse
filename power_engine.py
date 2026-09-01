@@ -433,6 +433,7 @@ class PowerEngine:
                 "avg_watts": avg_watts
             },
             "cpu_usage_pct": round(cpu_pct, 1),
+            "gpu_usage_pct": round(min(100.0, max(2.0, gpu_load_factor * 100.0)), 1),
             "ram": ram_metrics,
             "processes": procs,
             "network": net_metrics,
