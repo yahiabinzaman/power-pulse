@@ -248,27 +248,32 @@
               </div>
             </div>
 
-            <!-- 4. Electricity Cost Estimate Grid -->
+            <!-- 4. Electricity Cost & Historical Energy Tracking Grid -->
             <div class="hud-box cost-matrix-hud">
               <div class="hud-top">
-                <span class="hud-label">// BILLING_PROJECTION</span>
-                <span class="hud-tag neon-amber">TARIFF</span>
+                <span class="hud-label">// MOTIJHEEL_BILLING_MATRIX</span>
+                <span class="hud-tag neon-amber">DPDC PEAK</span>
               </div>
               <div class="cost-tri-grid">
                 <div class="cost-cell">
-                  <span class="cost-code">// HOURLY</span>
-                  <span class="cost-figure neon-green" id="costPerHour">৳ 0.000</span>
-                  <span class="cost-meta">PER_HR</span>
+                  <span class="cost-code">// TODAY</span>
+                  <span class="cost-figure neon-green" id="costToday">৳ 0.00</span>
+                  <span class="cost-meta" id="kwhToday">0.000 kWh</span>
                 </div>
                 <div class="cost-cell">
-                  <span class="cost-code">// 24H_CYCLE</span>
-                  <span class="cost-figure neon-cyan" id="costPerDay">৳ 0.00</span>
-                  <span class="cost-meta">PER_DAY</span>
+                  <span class="cost-code">// THIS_MONTH</span>
+                  <span class="cost-figure neon-cyan" id="costMonth">৳ 0.00</span>
+                  <span class="cost-meta" id="kwhMonth">0.000 kWh</span>
                 </div>
                 <div class="cost-cell highlight-cost">
-                  <span class="cost-code">// 30D_MONTH</span>
-                  <span class="cost-figure neon-amber" id="costPerMonth">৳ 0.00</span>
-                  <span class="cost-meta">MONTHLY</span>
+                  <span class="cost-code">// ALL_TIME</span>
+                  <span class="cost-figure neon-purple" id="costLifetime">৳ 0.00</span>
+                  <span class="cost-meta" id="kwhLifetime">0.000 kWh</span>
+                </div>
+                <div class="cost-cell">
+                  <span class="cost-code">// DAILY_AVG</span>
+                  <span class="cost-figure neon-amber" id="costDailyAvg">৳ 0.00</span>
+                  <span class="cost-meta">PER_DAY</span>
                 </div>
               </div>
             </div>

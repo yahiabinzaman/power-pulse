@@ -9,6 +9,8 @@ import sys
 import platform
 import subprocess
 import time
+import datetime
+import socket
 import re
 import json
 
@@ -25,13 +27,17 @@ class PowerEngine:
         self.samples_count = 0
         self.watts_sum = 0.0
 
+        # Persistent Lifetime & Daily/Monthly Energy History
+        self.history_file = os.path.expanduser("~/.powerpulse_history.json")
+        self.history_data = self._load_history()
+        self.last_history_save = time.time()
+
         # Network Telemetry State
         self.last_net_time = time.time()
         self.last_net_bytes = self._sample_network_raw_bytes()
         self.session_download_bytes = 0
         self.session_upload_bytes = 0
-        self.last_ping_ms = 12.0
-        self.ping_counter = 0
+        self.last_ping_ms = 2.5
 
     def _run_cmd(self, cmd_list, timeout=2.5):
         """Run a system command and return stripped stdout string."""
@@ -407,6 +413,10 @@ class PowerEngine:
 
         session_duration_sec = int(now - self.session_start_time)
 
+        # Update Persistent Energy History
+        self._update_history(joules, dt)
+        history_summary = self.get_history_summary(tariff_rate=14.11)
+
         # Sample Network Bandwidth & Latency
         net_metrics = self._sample_network_throughput(now)
         ram_metrics = self._sample_system_ram()
@@ -432,7 +442,122 @@ class PowerEngine:
                 "total_kwh": round(kwh, 6),
                 "carbon_kg": round(kwh * 0.475, 4)  # ~475g CO2 per kWh grid average
             },
+            "history": history_summary,
             "hardware": self.system_info
+        }
+
+    def _load_history(self):
+        """Load persistent cumulative history from disk."""
+        now_iso = datetime.datetime.now().isoformat()
+        default_hist = {
+            "installed_at": now_iso,
+            "lifetime_joules": 0.0,
+            "lifetime_kwh": 0.0,
+            "daily": {},
+            "monthly": {}
+        }
+        if os.path.exists(self.history_file):
+            try:
+                with open(self.history_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if "installed_at" not in data: data["installed_at"] = now_iso
+                    if "lifetime_kwh" not in data: data["lifetime_kwh"] = 0.0
+                    if "daily" not in data: data["daily"] = {}
+                    if "monthly" not in data: data["monthly"] = {}
+                    return data
+            except Exception:
+                pass
+        return default_hist
+
+    def _save_history(self):
+        """Save persistent cumulative history to disk."""
+        try:
+            with open(self.history_file, "w", encoding="utf-8") as f:
+                json.dump(self.history_data, f, indent=2)
+        except Exception:
+            pass
+
+    def _update_history(self, joules, dt):
+        """Accumulate joules into lifetime, today's, and this month's buckets."""
+        now_dt = datetime.datetime.now()
+        today_key = now_dt.strftime("%Y-%m-%d")
+        month_key = now_dt.strftime("%Y-%m")
+
+        kwh = joules / 3600000.0
+
+        # Lifetime
+        self.history_data["lifetime_joules"] = self.history_data.get("lifetime_joules", 0.0) + joules
+        self.history_data["lifetime_kwh"] = self.history_data.get("lifetime_kwh", 0.0) + kwh
+
+        # Daily
+        d = self.history_data["daily"].setdefault(today_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0})
+        d["joules"] += joules
+        d["kwh"] += kwh
+        d["seconds"] += int(dt)
+
+        # Monthly
+        m = self.history_data["monthly"].setdefault(month_key, {"joules": 0.0, "kwh": 0.0, "seconds": 0})
+        m["joules"] += joules
+        m["kwh"] += kwh
+        m["seconds"] += int(dt)
+
+        # Save to disk every 5 seconds
+        if time.time() - self.last_history_save > 5.0:
+            self.last_history_save = time.time()
+            self._save_history()
+
+    def get_history_summary(self, tariff_rate=14.11):
+        """Return structured summary of today, month, lifetime, and daily/monthly averages."""
+        now_dt = datetime.datetime.now()
+        today_key = now_dt.strftime("%Y-%m-%d")
+        month_key = now_dt.strftime("%Y-%m")
+
+        today_rec = self.history_data.get("daily", {}).get(today_key, {"kwh": 0.0, "seconds": 0})
+        month_rec = self.history_data.get("monthly", {}).get(month_key, {"kwh": 0.0, "seconds": 0})
+
+        today_kwh = round(today_rec.get("kwh", 0.0), 4)
+        today_cost = round(today_kwh * tariff_rate, 2)
+
+        month_kwh = round(month_rec.get("kwh", 0.0), 4)
+        month_cost = round(month_kwh * tariff_rate, 2)
+
+        lifetime_kwh = round(self.history_data.get("lifetime_kwh", 0.0), 4)
+        lifetime_cost = round(lifetime_kwh * tariff_rate, 2)
+
+        # Active days
+        active_days = len(self.history_data.get("daily", {}))
+        if active_days > 0:
+            daily_avg_kwh = round(lifetime_kwh / active_days, 4)
+            daily_avg_cost = round(lifetime_cost / active_days, 2)
+        else:
+            daily_avg_kwh = today_kwh
+            daily_avg_cost = today_cost
+
+        monthly_projected_cost = round(daily_avg_cost * 30.0, 2)
+
+        return {
+            "installed_at": self.history_data.get("installed_at", today_key),
+            "today": {
+                "date": today_key,
+                "kwh": today_kwh,
+                "cost": today_cost,
+                "active_seconds": today_rec.get("seconds", 0)
+            },
+            "this_month": {
+                "month": month_key,
+                "kwh": month_kwh,
+                "cost": month_cost
+            },
+            "lifetime": {
+                "kwh": lifetime_kwh,
+                "cost": lifetime_cost,
+                "active_days": max(1, active_days)
+            },
+            "averages": {
+                "daily_avg_kwh": daily_avg_kwh,
+                "daily_avg_cost": daily_avg_cost,
+                "monthly_projected_cost": monthly_projected_cost
+            }
         }
 
     def _sample_system_ram(self):
@@ -506,7 +631,7 @@ class PowerEngine:
         return (in_b, out_b)
 
     def _sample_network_throughput(self, now):
-        """Calculate live network download/upload bandwidth and ping latency."""
+        """Calculate live network download/upload bandwidth and real-time ping latency."""
         curr_in, curr_out = self._sample_network_raw_bytes()
         last_in, last_out = self.last_net_bytes
         dt = max(0.1, now - self.last_net_time)
@@ -528,10 +653,8 @@ class PowerEngine:
         down_mbps = (down_kbs * 8.0) / 1024.0
         up_mbps = (up_kbs * 8.0) / 1024.0
 
-        # Periodic ping measurement every 3 seconds
-        self.ping_counter += 1
-        if self.ping_counter % 3 == 0:
-            self.last_ping_ms = self._measure_ping_latency()
+        # Real-time sub-millisecond ping measurement on every sample
+        self.last_ping_ms = self._measure_ping_latency()
 
         return {
             "down_kbs": round(down_kbs, 1),
@@ -544,14 +667,27 @@ class PowerEngine:
         }
 
     def _measure_ping_latency(self):
-        """Measure real network round-trip ping time in milliseconds."""
+        """Measure real network round-trip ping time in milliseconds using low-overhead direct socket connect."""
+        targets = [("1.1.1.1", 53), ("8.8.8.8", 53), ("1.0.0.1", 53)]
+        for host, port in targets:
+            try:
+                t0 = time.perf_counter()
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(0.5)
+                s.connect((host, port))
+                t1 = time.perf_counter()
+                s.close()
+                return round((t1 - t0) * 1000.0, 1)
+            except Exception:
+                continue
+        # Fallback to ICMP ping
         try:
             if self.os_type == "darwin":
-                out = self._run_cmd(["ping", "-c", "1", "-W", "800", "1.1.1.1"])
+                out = self._run_cmd(["ping", "-c", "1", "-W", "500", "1.1.1.1"])
                 m = re.search(r"time=(\d+[\.\d]*)", out)
                 if m: return round(float(m.group(1)), 1)
             elif self.os_type == "win32":
-                out = self._run_cmd(["ping", "-n", "1", "-w", "800", "1.1.1.1"])
+                out = self._run_cmd(["ping", "-n", "1", "-w", "500", "1.1.1.1"])
                 m = re.search(r"time[=<](\d+)ms", out)
                 if m: return round(float(m.group(1)), 1)
         except Exception:

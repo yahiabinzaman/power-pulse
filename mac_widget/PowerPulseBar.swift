@@ -34,12 +34,46 @@ struct NetworkData: Codable {
     let up_kbs: Double
 }
 
+struct DayRecord: Codable {
+    let date: String?
+    let kwh: Double?
+    let cost: Double?
+    let active_seconds: Int?
+}
+
+struct MonthRecord: Codable {
+    let month: String?
+    let kwh: Double?
+    let cost: Double?
+}
+
+struct LifetimeRecord: Codable {
+    let kwh: Double?
+    let cost: Double?
+    let active_days: Int?
+}
+
+struct AveragesRecord: Codable {
+    let daily_avg_kwh: Double?
+    let daily_avg_cost: Double?
+    let monthly_projected_cost: Double?
+}
+
+struct HistoryData: Codable {
+    let installed_at: String?
+    let today: DayRecord?
+    let this_month: MonthRecord?
+    let lifetime: LifetimeRecord?
+    let averages: AveragesRecord?
+}
+
 struct TelemetryResponse: Codable {
     let power: PowerData
     let cpu_usage_pct: Double
     let ram: RamData?
     let processes: [ProcessItem]?
     let network: NetworkData?
+    let history: HistoryData?
 }
 
 // MARK: - App Delegate
@@ -169,7 +203,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             cpu_usage_pct: cpuVal,
             ram: RamData(used_gb: round(ramUsedGB * 10) / 10, total_gb: round(totalGB * 10) / 10, pct: round(ramPct * 10) / 10),
             processes: nil,
-            network: NetworkData(down_mbps: 0.0, up_mbps: 0.0, ping_ms: 1.5, down_kbs: 0.0, up_kbs: 0.0)
+            network: NetworkData(down_mbps: 0.0, up_mbps: 0.0, ping_ms: 1.5, down_kbs: 0.0, up_kbs: 0.0),
+            history: nil
         )
     }
 
@@ -274,17 +309,37 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(NSMenuItem.separator())
             }
 
-            // Electricity Cost (Motijheel Peak Slab)
+            // Electricity Cost & Energy Tracking (Motijheel Peak @ ৳14.11/kWh)
             let kw = p.total_watts / 1000.0
             let costHr = kw * tariffRate
-            let costDay = costHr * 24.0
-            let costMo = costHr * 24.0 * 30.0
-            let costHeader = NSMenuItem(title: "Electricity Cost (Motijheel Peak @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
-            costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost (Motijheel Peak @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+            let hist = data.history
+
+            let costHeader = NSMenuItem(title: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
+            costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(costHeader)
-            menu.addItem(NSMenuItem(title: String(format: "  Cost / Hour: %@ %.3f", currencySymbol, costHr), action: nil, keyEquivalent: ""))
-            menu.addItem(NSMenuItem(title: String(format: "  24h Nonstop: %@ %.2f / day", currencySymbol, costDay), action: nil, keyEquivalent: ""))
-            menu.addItem(NSMenuItem(title: String(format: "  Monthly Est: %@ %.2f (30d Peak)", currencySymbol, costMo), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "  Live Rate: %@ %.3f / hr (%.1f Watts)", currencySymbol, costHr, p.total_watts), action: nil, keyEquivalent: ""))
+
+            if let h = hist {
+                let todayCost = h.today?.cost ?? 0.0
+                let todayKwh = h.today?.kwh ?? 0.0
+                let monthCost = h.this_month?.cost ?? 0.0
+                let monthKwh = h.this_month?.kwh ?? 0.0
+                let lifeCost = h.lifetime?.cost ?? 0.0
+                let lifeKwh = h.lifetime?.kwh ?? 0.0
+                let dailyAvg = h.averages?.daily_avg_cost ?? 0.0
+                let projMonth = h.averages?.monthly_projected_cost ?? 0.0
+
+                menu.addItem(NSMenuItem(title: String(format: "  Today's Bill: %@ %.2f (%.3f kWh)", currencySymbol, todayCost, todayKwh), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  This Month: %@ %.2f (%.3f kWh)", currencySymbol, monthCost, monthKwh), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  All-Time Total: %@ %.2f (%.3f kWh)", currencySymbol, lifeCost, lifeKwh), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Daily Average: %@ %.2f / day", currencySymbol, dailyAvg), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Monthly Estimate: %@ %.2f (30d Projection)", currencySymbol, projMonth), action: nil, keyEquivalent: ""))
+            } else {
+                let costDay = costHr * 24.0
+                let costMo = costHr * 24.0 * 30.0
+                menu.addItem(NSMenuItem(title: String(format: "  24h Nonstop: %@ %.2f / day", currencySymbol, costDay), action: nil, keyEquivalent: ""))
+                menu.addItem(NSMenuItem(title: String(format: "  Monthly Est: %@ %.2f (30d Peak)", currencySymbol, costMo), action: nil, keyEquivalent: ""))
+            }
             menu.addItem(NSMenuItem.separator())
 
             // Top App

@@ -529,11 +529,11 @@ body:not(.crt-active) .scanlines {
 .net-speed-val { font-size: 11px; font-weight: 800; font-family: var(--font-mono); }
 .net-sub-val { font-size: 8px; color: var(--text-dim); text-align: right; }
 
-/* Cost Tri Grid */
+/* Cost History Grid */
 .cost-tri-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
 }
 
 .cost-cell {
