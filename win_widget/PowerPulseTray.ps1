@@ -11,7 +11,7 @@ Add-Type -AssemblyName System.Web
 # Global State
 $script:Port = 8765
 $script:ApiUrl = "http://127.0.0.1:$script:Port/api/telemetry"
-$script:TariffRate = 14.11
+$script:TariffRate = 25.00
 $script:Currency = [char]0x09F3 # ৳ Bengali Taka symbol
 
 # Auto-spawn backend daemon if not running
@@ -182,7 +182,7 @@ function Update-MenuUI($data) {
         }
 
         # 5. Electricity Cost & Energy Tracking
-        $cHeader = $script:contextMenu.Items.Add("Electricity Cost & Energy (Motijheel @ $script:Currency 14.11/kWh)")
+        $cHeader = $script:contextMenu.Items.Add("Electricity Cost & Energy (@ $script:Currency 25.00/kWh)")
         $cHeader.Font = New-Object System.Drawing.Font "Segoe UI", 9, [System.Drawing.FontStyle]::Bold
         $cHeader.Enabled = $false
 

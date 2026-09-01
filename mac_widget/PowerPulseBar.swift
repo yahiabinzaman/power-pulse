@@ -94,8 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // 3: Power Only
     var displayMode: Int = UserDefaults.standard.integer(forKey: "pp_display_mode")
     
-    // Motijheel Highest Peak Electricity Tariff: ৳13.44 + 5% VAT = ৳14.11 / unit
-    var tariffRate: Double = 14.11
+    // Custom Electricity Tariff: ৳25.00 / unit (kWh)
+    var tariffRate: Double = 25.00
     var currencySymbol: String = "৳"
     
     var consecutiveErrors: Int = 0
@@ -362,12 +362,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(NSMenuItem.separator())
             }
 
-            // 5. Electricity Cost & Energy Tracking (Motijheel Peak @ ৳14.11/kWh)
+            // 5. Electricity Cost & Energy Tracking (@ ৳25.00/kWh)
             let kw = p.total_watts / 1000.0
             let costHr = kw * tariffRate
 
-            let costHeader = NSMenuItem(title: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", action: nil, keyEquivalent: "")
-            costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost & Energy (Motijheel @ ৳14.11/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
+            let costHeader = NSMenuItem(title: "Electricity Cost & Energy (@ ৳25.00/kWh)", action: nil, keyEquivalent: "")
+            costHeader.attributedTitle = NSAttributedString(string: "Electricity Cost & Energy (@ ৳25.00/kWh)", attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(costHeader)
             menu.addItem(NSMenuItem(title: String(format: "  Live Rate:        %@ %.3f / hr (%.1f Watts)", currencySymbol, costHr, p.total_watts), action: nil, keyEquivalent: ""))
 

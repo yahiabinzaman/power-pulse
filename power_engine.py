@@ -419,7 +419,7 @@ class PowerEngine:
 
         # Update Persistent Energy & Internet History
         self._update_history(joules, dt, delta_in, delta_out)
-        history_summary = self.get_history_summary(tariff_rate=14.11)
+        history_summary = self.get_history_summary(tariff_rate=25.00)
 
         return {
             "timestamp": now,
@@ -523,7 +523,7 @@ class PowerEngine:
             self.last_history_save = time.time()
             self._save_history()
 
-    def get_history_summary(self, tariff_rate=14.11):
+    def get_history_summary(self, tariff_rate=25.00):
         """Return structured summary of today, month, lifetime, and daily/monthly averages with dynamic precision."""
         now_dt = datetime.datetime.now()
         today_key = now_dt.strftime("%Y-%m-%d")

@@ -395,20 +395,19 @@
         <div class="form-row">
           <label for="areaPresetSelect">&gt;&gt; SELECT_AREA_PRESET // DPDC / DESCO:</label>
           <select id="areaPresetSelect">
-            <option value="10.55" selected>[OFFICE] Motijheel Commercial (DPDC LT-E) - ৳10.55/unit</option>
+            <option value="25.00" selected>[LOCAL TARIFF] Current Area Unit Rate - ৳25.00/unit</option>
+            <option value="10.55">[OFFICE] Motijheel Commercial (DPDC LT-E) - ৳10.55/unit</option>
             <option value="8.90">[HOME] Motijheel Residential Standard (DPDC LT-A) - ৳8.90/unit</option>
-            <option value="10.15">[HIGH] Motijheel Residential High Usage (301-400u) - ৳10.15/unit</option>
-            <option value="13.44">[PEAK] Motijheel Peak Residential (>600 units) - ৳13.44/unit</option>
-            <option value="4.19">[LIFELINE] Dhaka DPDC/DESCO (0-50 units) - ৳4.19/unit</option>
+            <option value="13.44">[PEAK] Motijheel Peak Residential (>600u) - ৳13.44/unit</option>
             <option value="custom">[CUSTOM] Manual Unit Rate</option>
           </select>
-          <span class="form-hint">// Automatically calibrated for Motijheel, Dhaka under DPDC 2026 tariff schedule.</span>
+          <span class="form-hint">// Configured for ৳25.00 per unit (1 kWh).</span>
         </div>
 
         <div class="form-row">
           <label for="tariffRateInput">&gt;&gt; EXACT_TARIFF_RATE_PER_UNIT (1 kWh = 1 Unit):</label>
           <div class="input-with-postfix">
-            <input type="number" id="tariffRateInput" step="0.05" value="10.55" min="0.1" />
+            <input type="number" id="tariffRateInput" step="0.05" value="25.00" min="0.1" />
             <span class="postfix" id="tariffUnitText">৳ / unit</span>
           </div>
           <span class="form-hint">// 1 Unit = 1000 Watts for 1 hour. You can adjust this anytime.</span>
@@ -416,10 +415,10 @@
 
         <div class="form-row">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <input type="checkbox" id="includeVatCheck" checked style="width: auto;" />
+            <input type="checkbox" id="includeVatCheck" style="width: auto;" />
             <span>&gt;&gt; INCLUDE_GOVT_VAT (+5% Bangladesh Electricity VAT)</span>
           </label>
-          <span class="form-hint" id="effectiveRateHint">// Effective Rate with VAT: ৳ 11.08 / unit</span>
+          <span class="form-hint" id="effectiveRateHint">// Effective Rate: ৳ 25.00 / unit</span>
         </div>
 
         <div class="form-row">

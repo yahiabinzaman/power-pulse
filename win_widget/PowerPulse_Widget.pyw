@@ -138,7 +138,7 @@ class PowerPulseHUD(tk.Tk):
         p = data.get("power", {})
         total_w = p.get("total_watts", 0.0)
         peak_w = p.get("peak_watts", 0.0)
-        cost_hr = (total_w / 1000.0) * 14.11
+        cost_hr = (total_w / 1000.0) * 25.00
 
         cpu = data.get("cpu_usage_pct", 0.0)
         gpu = data.get("gpu_usage_pct", 8.0)
