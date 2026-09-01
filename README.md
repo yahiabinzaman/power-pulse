@@ -1,10 +1,18 @@
-# ⚡ CYBER_VOLT // Real-Time Power, Network Speed & Electricity Billing Cockpit
+<div align="center">
+  <img src="assets/logo.png" width="180" alt="PowerPulse Logo" style="border-radius: 24px; box-shadow: 0 0 25px rgba(0,255,102,0.4);" />
+  <h1>⚡ POWER_PULSE // CYBER_VOLT v4.2</h1>
+  <p><b>Real-Time Hardware Power Draw, Network Speed & Electricity Billing Cockpit</b></p>
+</div>
+
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-00ff66.svg?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows-00f0ff?style=for-the-badge&logo=apple&logoColor=white)](.)
 [![macOS Menu Bar Widget](https://img.shields.io/badge/macOS%20Widget-Native%20Swift-b026ff?style=for-the-badge&logo=swift&logoColor=white)](mac_widget/)
 [![Python](https://img.shields.io/badge/Python-3.8%2B%20Zero--Dependency-ffb000?style=for-the-badge&logo=python&logoColor=black)](.)
 [![System Architect](https://img.shields.io/badge/Architect-Yahia%20Bin%20Zaman-00ff66?style=for-the-badge&logo=github&logoColor=black)](https://github.com/yahiabinzaman)
+
+</div>
 
 A professional, zero-dependency, cyberpunk-themed hardware telemetry monitor and real-time electricity billing calculator for **macOS (Apple Silicon M1-M4 & Intel)** and **Windows (10/11)**. Includes a **Native macOS Menu Bar Status Widget** (`PowerPulseBar.app`) and a responsive **Web IDE Cockpit**.
 
