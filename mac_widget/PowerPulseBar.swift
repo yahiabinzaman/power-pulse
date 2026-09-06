@@ -125,7 +125,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         buildMenu(with: nil)
         ensureServerRunning()
 
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(fetchTelemetry), userInfo: nil, repeats: true)
+        // Ultra-responsive high refresh rate polling (0.35s / ~3x per second)
+        timer = Timer.scheduledTimer(timeInterval: 0.35, target: self, selector: #selector(fetchTelemetry), userInfo: nil, repeats: true)
         RunLoop.main.add(timer!, forMode: .common)
         
         fetchTelemetry()
@@ -240,7 +241,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func fetchTelemetry() {
         guard let url = URL(string: "http://127.0.0.1:8765/api/telemetry") else { return }
         var request = URLRequest(url: url)
-        request.timeoutInterval = 1.0
+        request.timeoutInterval = 0.5
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] (data, response, error) in
             guard let self = self else { return }

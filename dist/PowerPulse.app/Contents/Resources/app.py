@@ -35,7 +35,7 @@ def background_sampler():
                 latest_telemetry = sample
         except Exception as e:
             print(f"[PowerEngine Error] {e}", file=sys.stderr)
-        time.sleep(1.0)
+        time.sleep(0.3)
 
 # Start background thread
 sampler_thread = threading.Thread(target=background_sampler, daemon=True)
