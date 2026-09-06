@@ -8,8 +8,8 @@ let isCrtOn = true;
 let refreshIntervalMs = 1000;
 let pollTimer = null;
 let currencySymbol = localStorage.getItem("pp_currency") || "৳";
-let baseTariffRate = parseFloat(localStorage.getItem("pp_base_tariff") || "10.55"); // Motijheel DPDC standard
-let includeVat = localStorage.getItem("pp_include_vat") !== "false";
+let baseTariffRate = parseFloat(localStorage.getItem("pp_base_tariff") || "25.00");
+let includeVat = localStorage.getItem("pp_include_vat") === "true";
 let tariffRate = includeVat ? baseTariffRate * 1.05 : baseTariffRate;
 
 // DOM Elements

@@ -4,12 +4,22 @@ import Foundation
 // MARK: - Telemetry Models
 struct PowerData: Codable {
     let total_watts: Double
+    let system_watts: Double?
+    let display_watts: Double?
     let cpu_watts: Double
     let gpu_watts: Double
     let base_watts: Double
     let peak_watts: Double
     let min_watts: Double
     let avg_watts: Double
+}
+
+struct DisplayData: Codable {
+    let name: String?
+    let resolution: String?
+    let refresh_rate: Double?
+    let watts: Double?
+    let summary: String?
 }
 
 struct RamData: Codable {
@@ -74,6 +84,7 @@ struct HistoryData: Codable {
 
 struct TelemetryResponse: Codable {
     let power: PowerData
+    let display: DisplayData?
     let cpu_usage_pct: Double
     let gpu_usage_pct: Double?
     let ram: RamData?
@@ -196,16 +207,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let power = PowerData(
-            total_watts: 12.5,
-            cpu_watts: 4.5,
-            gpu_watts: 3.2,
+            total_watts: 43.6,
+            system_watts: 10.3,
+            display_watts: 33.3,
+            cpu_watts: 4.3,
+            gpu_watts: 2.5,
             base_watts: 2.8,
-            peak_watts: 24.0,
-            min_watts: 8.5,
-            avg_watts: 14.0
+            peak_watts: 36.6,
+            min_watts: 6.0,
+            avg_watts: 9.8
+        )
+        let display = DisplayData(
+            name: "E2721H",
+            resolution: "2560x1440",
+            refresh_rate: 120.0,
+            watts: 33.3,
+            summary: "E2721H (2560x1440 @ 120Hz)"
         )
         return TelemetryResponse(
             power: power,
+            display: display,
             cpu_usage_pct: cpuVal,
             gpu_usage_pct: 8.0,
             ram: RamData(used_gb: round(ramUsedGB * 10) / 10, total_gb: round(totalGB * 10) / 10, pct: round(ramPct * 10) / 10),
@@ -314,6 +335,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let r = ram {
                 menu.addItem(NSMenuItem(title: String(format: "  RAM Usage: %@  %.1f%% (%.1f GB / %.1f GB)", makeMeter(ramPct), ramPct, r.used_gb ?? 0, r.total_gb ?? 16), action: nil, keyEquivalent: ""))
             }
+            if let disp = data.display {
+                let dispSummary = disp.summary ?? "\(disp.name ?? "E2721H") (\(disp.resolution ?? "2560x1440") @ \(Int(disp.refresh_rate ?? 120))Hz)"
+                let dispW = disp.watts ?? p.display_watts ?? 33.3
+                menu.addItem(NSMenuItem(title: String(format: "  🖥️ Display:  %@ (%.1f W)", dispSummary, dispW), action: nil, keyEquivalent: ""))
+            }
             menu.addItem(NSMenuItem.separator())
 
             // 2. Power Telemetry
@@ -321,9 +347,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             totalPwr.attributedTitle = NSAttributedString(string: String(format: "Total Power Draw: %.2f Watts", p.total_watts), attributes: [.font: NSFont.boldSystemFont(ofSize: 12)])
             menu.addItem(totalPwr)
 
-            menu.addItem(NSMenuItem(title: String(format: "  CPU Core Package:   %.1f W", p.cpu_watts), action: nil, keyEquivalent: ""))
-            menu.addItem(NSMenuItem(title: String(format: "  GPU & Neural Engine: %.1f W", p.gpu_watts), action: nil, keyEquivalent: ""))
-            menu.addItem(NSMenuItem(title: String(format: "  RAM & SoC Base Load: %.1f W", p.base_watts), action: nil, keyEquivalent: ""))
+            if let dispW = p.display_watts {
+                let dispName = data.display?.name ?? "E2721H"
+                let dispHz = Int(data.display?.refresh_rate ?? 120)
+                menu.addItem(NSMenuItem(title: String(format: "  🖥️ %@ (%dHz Display): %.1f W", dispName, dispHz, dispW), action: nil, keyEquivalent: ""))
+            }
+            let sysW = p.system_watts ?? (p.cpu_watts + p.gpu_watts + p.base_watts)
+            menu.addItem(NSMenuItem(title: String(format: "  ⚡ System SoC Core Draw:   %.1f W", sysW), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "     • CPU Core Package:     %.1f W", p.cpu_watts), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "     • GPU & Neural Engine:  %.1f W", p.gpu_watts), action: nil, keyEquivalent: ""))
+            menu.addItem(NSMenuItem(title: String(format: "     • RAM & SoC Base Load:  %.1f W", p.base_watts), action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem(title: String(format: "  Min: %.1fW | Avg: %.1fW | Peak: %.1fW", p.min_watts, p.avg_watts, p.peak_watts), action: nil, keyEquivalent: ""))
             menu.addItem(NSMenuItem.separator())
 

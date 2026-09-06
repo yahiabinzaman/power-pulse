@@ -53,32 +53,37 @@ class PowerPulseHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         # API Endpoints
         if self.path == "/api/telemetry":
+            with telemetry_lock:
+                data = latest_telemetry if latest_telemetry else engine.sample_telemetry()
+            payload = json.dumps(data).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
-            
-            with telemetry_lock:
-                data = latest_telemetry if latest_telemetry else engine.sample_telemetry()
-            self.wfile.write(json.dumps(data).encode("utf-8"))
+            self.wfile.write(payload)
             return
 
         elif self.path == "/api/hardware":
+            payload = json.dumps(engine.system_info).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            self.wfile.write(json.dumps(engine.system_info).encode("utf-8"))
+            self.wfile.write(payload)
             return
 
         elif self.path == "/api/speedtest":
+            res = engine.run_speedtest_benchmark()
+            payload = json.dumps(res).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            res = engine.run_speedtest_benchmark()
-            self.wfile.write(json.dumps(res).encode("utf-8"))
+            self.wfile.write(payload)
             return
 
         # Serve Frontend Assets
