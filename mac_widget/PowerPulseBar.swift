@@ -272,24 +272,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let ramPct = data.ram?.pct ?? 65.0
         let ramGB = data.ram?.used_gb ?? 10.5
         let dispW = p.display_watts ?? data.display?.watts ?? 33.0
-        let monTag = String(format: "(M:%.0fW)", dispW)
 
         // Format Status Bar text based on user preference
         if let button = statusItem.button {
             switch displayMode {
             case 0: // Full (Watts + Monitor + CPU% + GPU% + RAM% + Net)
                 let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
-                button.title = String(format: "%.1fW %@  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, monTag, cpuPct, gpuPct, ramPct, netText)
+                button.title = String(format: "%.1fW  |  M %.0fW  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, dispW, cpuPct, gpuPct, ramPct, netText)
             case 1: // Power + Monitor + CPU% + GPU% + RAM (GB)
-                button.title = String(format: "%.1fW %@  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.1fG", p.total_watts, monTag, cpuPct, gpuPct, ramGB)
+                button.title = String(format: "%.1fW  |  M %.0fW  |  CPU %.0f%%  |  GPU %.0f%%  |  RAM %.1fG", p.total_watts, dispW, cpuPct, gpuPct, ramGB)
             case 2: // Power + Monitor + CPU% + RAM% + Net (Without GPU)
                 let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
-                button.title = String(format: "%.1fW %@  |  CPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, monTag, cpuPct, ramPct, netText)
+                button.title = String(format: "%.1fW  |  M %.0fW  |  CPU %.0f%%  |  RAM %.0f%%  |  %@", p.total_watts, dispW, cpuPct, ramPct, netText)
             case 3: // Power + Monitor + Net
                 let netText = (net?.down_mbps ?? 0) >= 1.0 ? String(format: "%.1fM", net?.down_mbps ?? 0) : String(format: "%.0fK", net?.down_kbs ?? 0)
-                button.title = String(format: "%.1fW %@  |  %@", p.total_watts, monTag, netText)
-            default: // Power Only
-                button.title = String(format: "%.1fW %@", p.total_watts, monTag)
+                button.title = String(format: "%.1fW  |  M %.0fW  |  %@", p.total_watts, dispW, netText)
+            default: // Power + Monitor Only
+                button.title = String(format: "%.1fW  |  M %.0fW", p.total_watts, dispW)
             }
         }
 
